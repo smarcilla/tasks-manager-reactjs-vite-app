@@ -1,0 +1,15 @@
+# ZAP Baseline Scan Rules
+# Format: rule_id	action	rule_name
+# Actions: IGNORE, WARN, FAIL
+
+# Informational alerts - ignore
+10021	IGNORE	X-Content-Type-Options Header Missing
+10036	IGNORE	Server Leaks Version Information via "Server" HTTP Response Header Field
+
+# Low risk - warn only
+10035	WARN	Strict-Transport-Security Header Not Set
+10098	WARN	Cross-Domain Misconfiguration
+
+# Medium/High risk - fail
+10011	FAIL	Cookie Without Secure Flag
+10012	FAIL	Password Autocomplete in Browser

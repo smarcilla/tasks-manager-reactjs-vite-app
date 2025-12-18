@@ -1,0 +1,35 @@
+node_modules
+dist
+coverage
+playwright-report
+test-results
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Tests
+e2e
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+
+# Misc
+README.md
+.husky
