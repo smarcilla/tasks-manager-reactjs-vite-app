@@ -1,3 +1,6 @@
 // API services and external integrations
 // export { api } from './api'
 // export { authService } from './auth'
+
+// Storage services
+export { getTasks, saveTasks } from './taskStorage'
