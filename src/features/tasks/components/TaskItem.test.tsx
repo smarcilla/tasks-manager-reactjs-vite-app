@@ -141,5 +141,39 @@ describe('TaskItem', () => {
 
       expect(onUpdate).toHaveBeenCalledWith('1', 'Blurred task')
     })
+
+    it('enters edit mode when Enter is pressed on focused title', async () => {
+      const user = userEvent.setup()
+
+      render(<TaskItem {...defaultProps} />)
+
+      const title = screen.getByText('Test task')
+      title.focus()
+      await user.keyboard('{Enter}')
+
+      expect(screen.getByRole('textbox')).toBeInTheDocument()
+      expect(screen.getByRole('textbox')).toHaveValue('Test task')
+    })
+
+    it('enters edit mode when F2 is pressed on focused title', async () => {
+      const user = userEvent.setup()
+
+      render(<TaskItem {...defaultProps} />)
+
+      const title = screen.getByText('Test task')
+      title.focus()
+      await user.keyboard('{F2}')
+
+      expect(screen.getByRole('textbox')).toBeInTheDocument()
+      expect(screen.getByRole('textbox')).toHaveValue('Test task')
+    })
+
+    it('title is focusable via keyboard', () => {
+      render(<TaskItem {...defaultProps} />)
+
+      const title = screen.getByText('Test task')
+
+      expect(title).toHaveAttribute('tabIndex', '0')
+    })
   })
 })

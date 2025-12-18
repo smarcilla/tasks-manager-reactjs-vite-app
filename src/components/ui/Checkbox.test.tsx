@@ -54,4 +54,31 @@ describe('Checkbox', () => {
 
     expect(handleChange).toHaveBeenCalledTimes(1)
   })
+
+  it('supports aria-label when label is empty', () => {
+    render(<Checkbox label="" aria-label="Toggle task" />)
+
+    expect(screen.getByRole('checkbox', { name: 'Toggle task' })).toBeInTheDocument()
+  })
+
+  it('does not render label element when label is empty', () => {
+    const { container } = render(<Checkbox label="" aria-label="Toggle task" />)
+
+    // Should not have a visible label element with text
+    const labelElement = container.querySelector('label')
+    expect(labelElement).toBeNull()
+  })
+
+  it('is accessible via keyboard when label is empty', async () => {
+    const handleChange = vi.fn()
+    const user = userEvent.setup()
+
+    render(<Checkbox label="" aria-label="Toggle task" onChange={handleChange} />)
+
+    const checkbox = screen.getByRole('checkbox', { name: 'Toggle task' })
+    checkbox.focus()
+    await user.keyboard(' ')
+
+    expect(handleChange).toHaveBeenCalledTimes(1)
+  })
 })
