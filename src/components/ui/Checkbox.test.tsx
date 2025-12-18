@@ -81,4 +81,30 @@ describe('Checkbox', () => {
 
     expect(handleChange).toHaveBeenCalledTimes(1)
   })
+
+  it('calls onChange when Enter key is pressed', async () => {
+    const handleChange = vi.fn()
+    const user = userEvent.setup()
+
+    render(<Checkbox label="Accept terms" onChange={handleChange} />)
+
+    const checkbox = screen.getByRole('checkbox')
+    checkbox.focus()
+    await user.keyboard('{Enter}')
+
+    expect(handleChange).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not call onChange on Enter when disabled', async () => {
+    const handleChange = vi.fn()
+    const user = userEvent.setup()
+
+    render(<Checkbox label="Accept terms" onChange={handleChange} disabled />)
+
+    const checkbox = screen.getByRole('checkbox')
+    checkbox.focus()
+    await user.keyboard('{Enter}')
+
+    expect(handleChange).not.toHaveBeenCalled()
+  })
 })
