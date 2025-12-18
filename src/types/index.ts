@@ -1,3 +1,2 @@
-// Shared TypeScript types and interfaces
-// export type { User } from './user'
-// export type { ApiResponse } from './api'
+// Task management types
+export type { Task, TaskFilter, NewTaskData, UpdateTaskData } from './task'
