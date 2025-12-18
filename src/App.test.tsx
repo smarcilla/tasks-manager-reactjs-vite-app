@@ -1,22 +1,19 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { describe, it, expect } from 'vitest'
 import App from './App'
 
 describe('App', () => {
-  it('renders headline', () => {
+  it('renders the app title', () => {
     render(<App />)
-    expect(screen.getByText('Vite + React')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /tasks manager/i })).toBeInTheDocument()
   })
 
-  it('increments counter on button click', async () => {
-    const user = userEvent.setup()
+  it('renders the main content area', () => {
     render(<App />)
+    expect(screen.getByRole('main')).toBeInTheDocument()
+  })
 
-    const button = screen.getByRole('button', { name: /count is/i })
-    expect(button).toHaveTextContent('count is 0')
-
-    await user.click(button)
-    expect(button).toHaveTextContent('count is 1')
+  it('displays welcome message', () => {
+    render(<App />)
+    expect(screen.getByText(/gestiona tus tareas/i)).toBeInTheDocument()
   })
 })
