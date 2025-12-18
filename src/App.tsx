@@ -1,15 +1,35 @@
-import './App.css'
+import { useState } from 'react'
+import { AppLayout } from './components/layout'
+import { TaskForm, TaskFilter, TaskList } from './features/tasks'
+import { useTasks, useTaskFilter } from './hooks'
+import type { TaskFilter as TaskFilterType } from './types'
 
 function App() {
+  const { tasks, addTask, toggleTask, deleteTask, updateTask } = useTasks()
+  const [filter, setFilter] = useState<TaskFilterType>('all')
+  const filteredTasks = useTaskFilter(tasks, filter)
+
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>Tasks Manager</h1>
-      </header>
-      <main className="app-main">
-        <p>Gestiona tus tareas de forma sencilla</p>
-      </main>
-    </div>
+    <AppLayout>
+      <div className="space-y-6">
+        <section aria-label="Agregar tarea">
+          <TaskForm onSubmit={addTask} />
+        </section>
+
+        <section aria-label="Filtrar tareas">
+          <TaskFilter currentFilter={filter} onChange={setFilter} />
+        </section>
+
+        <section aria-label="Lista de tareas">
+          <TaskList
+            tasks={filteredTasks}
+            onToggle={toggleTask}
+            onDelete={deleteTask}
+            onUpdate={updateTask}
+          />
+        </section>
+      </div>
+    </AppLayout>
   )
 }
 
