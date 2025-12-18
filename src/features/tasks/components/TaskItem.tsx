@@ -68,8 +68,16 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
         />
       ) : (
         <span
+          tabIndex={0}
+          role="button"
           onDoubleClick={handleDoubleClick}
-          className={`flex-1 cursor-pointer ${
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === 'F2') {
+              e.preventDefault()
+              handleDoubleClick()
+            }
+          }}
+          className={`flex-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-1 ${
             task.completed ? 'line-through text-gray-400' : 'text-gray-900'
           }`}
         >
