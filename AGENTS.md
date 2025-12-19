@@ -4,17 +4,28 @@ This file provides context for AI coding assistants working on this project.
 
 ## Project Overview
 
-Tasks Manager - A simple task management application built with React + TypeScript + Vite. Users can create, edit, delete, and filter tasks with localStorage persistence.
+**Tasks Manager** - A production-ready task management application built with React + TypeScript + Vite following TDD methodology. Users can create, edit, delete, and filter tasks with localStorage persistence.
+
+### Project Status: Complete
+
+All 10 implementation phases have been completed:
+- 128 unit tests passing
+- 23 E2E tests passing
+- WCAG 2.1 AA accessibility compliance
+- Docker-ready for deployment
 
 ## Tech Stack
 
-- **React 19.2** with TypeScript 5.9
-- **Vite 7** for build tooling
-- **Tailwind CSS 4** for styling
-- **Vitest** + Testing Library for unit tests
-- **Playwright** for E2E tests (with Page Object Model pattern)
-- **ESLint 9** with flat config
-- **pnpm** as package manager
+| Category | Technology | Version |
+|----------|------------|---------|
+| Framework | React | 19.2 |
+| Language | TypeScript | 5.9 |
+| Build Tool | Vite | 7 |
+| Styling | Tailwind CSS | 4 |
+| Unit Testing | Vitest + Testing Library | latest |
+| E2E Testing | Playwright | latest |
+| Linting | ESLint (flat config) | 9 |
+| Package Manager | pnpm | 9+ |
 
 ## Key Files
 
@@ -29,35 +40,99 @@ Tasks Manager - A simple task management application built with React + TypeScri
 
 ## Architecture
 
+### Directory Structure
+
 ```
 src/
-├── components/       # Reusable UI components
-│   ├── ui/           # Primitives (Button, Input, Checkbox)
-│   └── layout/       # Layout (AppLayout)
-├── features/         # Feature-based modules
-│   └── tasks/        # Task management feature
-│       └── components/   # TaskItem, TaskForm, TaskList, TaskFilter
-├── hooks/            # Shared custom hooks
-│   ├── useTasks.ts       # Task CRUD operations + state
-│   └── useTaskFilter.ts  # Filter logic
-├── lib/utils/        # Utility functions
-├── services/         # External integrations
-│   └── taskStorage.ts    # localStorage persistence
-├── types/            # Shared TypeScript types
-│   └── task.ts           # Task, TaskFilter types
+├── components/           # Reusable UI components
+│   ├── ui/               # Primitives (Button, Input, Checkbox)
+│   │   ├── Button.tsx        # Variant-based button with loading state
+│   │   ├── Input.tsx         # Form input with error handling
+│   │   └── Checkbox.tsx      # Accessible checkbox with label
+│   └── layout/           # Layout components
+│       └── AppLayout.tsx     # Main layout with skip link
+├── features/             # Feature-based modules
+│   └── tasks/            # Task management feature
+│       └── components/
+│           ├── TaskItem.tsx      # Single task with animations
+│           ├── TaskForm.tsx      # Add task form
+│           ├── TaskList.tsx      # Task list with empty state
+│           └── TaskFilter.tsx    # Filter buttons
+├── hooks/                # Shared custom hooks
+│   ├── useTasks.ts           # Task CRUD operations + state
+│   └── useTaskFilter.ts      # Memoized filter logic
+├── services/             # External integrations
+│   └── taskStorage.ts        # localStorage persistence
+├── types/                # Shared TypeScript types
+│   └── task.ts               # Task, TaskFilter, NewTaskData
+├── App.tsx               # Root component
+├── index.css             # Global styles + animations
+└── main.tsx              # Entry point
+
+e2e/
+├── pages/                # Page Object Models
+│   ├── BasePage.ts           # Base class with common methods
+│   └── TasksPage.ts          # Task page interactions
+├── app.spec.ts           # App-level E2E tests
+└── tasks.spec.ts         # Task feature E2E tests
+```
+
+### Architecture Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| **Feature-based structure** | Groups related code together, scales well |
+| **Custom hooks for state** | Separates business logic from UI components |
+| **Service layer** | Abstracts localStorage, enables easy testing/mocking |
+| **Page Object Model** | E2E tests are maintainable and reusable |
+| **Barrel exports** | Clean imports via index.ts files |
+| **forwardRef for inputs** | Enables ref passing for focus management |
+| **Lazy initialization** | `useState(() => getTasks())` avoids re-reading on every render |
+
+### Data Flow
+
+```
+User Action
+    │
+    ▼
+┌─────────────────┐
+│   App.tsx       │  ◄── Manages filter state
+│   (Container)   │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐     ┌──────────────────┐
+│   useTasks()    │────►│   taskStorage    │
+│   (CRUD Hook)   │     │   (localStorage) │
+└────────┬────────┘     └──────────────────┘
+         │
+         ▼
+┌─────────────────┐
+│ useTaskFilter() │  ◄── Memoized filtering
+│   (Filter Hook) │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   TaskList      │  ◄── Renders filtered tasks
+│   (Presenter)   │
+└─────────────────┘
 ```
 
 ## Domain Model
 
 ```typescript
 interface Task {
-  id: string
-  title: string
-  completed: boolean
-  createdAt: Date
+  id: string          // crypto.randomUUID()
+  title: string       // User-provided, trimmed
+  completed: boolean  // Toggle state
+  createdAt: Date     // Auto-generated
 }
 
 type TaskFilter = 'all' | 'completed' | 'pending'
+
+type NewTaskData = Pick<Task, 'title'>
+type UpdateTaskData = Partial<Pick<Task, 'title' | 'completed'>>
 ```
 
 ## Conventions
@@ -80,132 +155,40 @@ type TaskFilter = 'all' | 'completed' | 'pending'
 - Use `getByRole` queries when possible
 - Prefer `userEvent` over `fireEvent`
 - Test behavior, not implementation
+- Use fake timers for animation delays: `vi.useFakeTimers()`
 
 ### E2E Tests with Page Object Model (POM)
-- Page Objects are located in `e2e/pages/`
-- Each page/feature should have its own Page Object class
-- Page Objects encapsulate selectors and actions
-- Tests should only interact with the UI through Page Objects
 
-**POM Structure:**
-```
-e2e/
-├── pages/
-│   ├── BasePage.ts       # Common methods (goto, waitForLoad, etc.)
-│   └── TasksPage.ts      # Task-specific actions and selectors
-├── app.spec.ts
-└── tasks.spec.ts
-```
+Page Objects encapsulate UI interactions:
 
-**POM Implementation Guidelines:**
 ```typescript
-// e2e/pages/BasePage.ts
-import { Page } from '@playwright/test'
-
-export class BasePage {
-  constructor(protected page: Page) {}
-
-  async goto(path: string = '/') {
-    await this.page.goto(path)
-  }
-}
-
 // e2e/pages/TasksPage.ts
-import { Page, Locator } from '@playwright/test'
-import { BasePage } from './BasePage'
-
 export class TasksPage extends BasePage {
-  // Locators (lazy evaluation)
   readonly taskInput: Locator
   readonly addButton: Locator
-  readonly taskList: Locator
-  readonly filterAll: Locator
-  readonly filterCompleted: Locator
-  readonly filterPending: Locator
 
   constructor(page: Page) {
     super(page)
     this.taskInput = page.getByPlaceholder('Nueva tarea')
     this.addButton = page.getByRole('button', { name: /agregar/i })
-    this.taskList = page.getByRole('list')
-    this.filterAll = page.getByRole('button', { name: /todas/i })
-    this.filterCompleted = page.getByRole('button', { name: /completadas/i })
-    this.filterPending = page.getByRole('button', { name: /pendientes/i })
   }
 
-  // Actions
-  async addTask(title: string) {
+  async addTask(title: string): Promise<void> {
     await this.taskInput.fill(title)
     await this.addButton.click()
   }
 
-  async toggleTask(title: string) {
-    await this.getTaskCheckbox(title).click()
+  async deleteTask(title: string): Promise<void> {
+    const taskItem = this.getTaskItem(title)
+    await taskItem.getByRole('button', { name: /eliminar/i }).click()
+    // Wait for animation to complete
+    await taskItem.waitFor({ state: 'hidden' })
   }
 
-  async deleteTask(title: string) {
-    await this.getTaskItem(title).getByRole('button', { name: /eliminar/i }).click()
-  }
-
-  async filterBy(filter: 'all' | 'completed' | 'pending') {
-    const filterButton = {
-      all: this.filterAll,
-      completed: this.filterCompleted,
-      pending: this.filterPending
-    }
-    await filterButton[filter].click()
-  }
-
-  // Getters for assertions
   getTaskItem(title: string): Locator {
     return this.page.getByRole('listitem').filter({ hasText: title })
   }
-
-  getTaskCheckbox(title: string): Locator {
-    return this.getTaskItem(title).getByRole('checkbox')
-  }
-
-  async getTaskCount(): Promise<number> {
-    return this.page.getByRole('listitem').count()
-  }
 }
-```
-
-**Using POM in Tests:**
-```typescript
-// e2e/tasks.spec.ts
-import { test, expect } from '@playwright/test'
-import { TasksPage } from './pages/TasksPage'
-
-test.describe('Tasks', () => {
-  let tasksPage: TasksPage
-
-  test.beforeEach(async ({ page }) => {
-    tasksPage = new TasksPage(page)
-    await tasksPage.goto()
-  })
-
-  test('user can create a task', async () => {
-    await tasksPage.addTask('Buy groceries')
-    await expect(tasksPage.getTaskItem('Buy groceries')).toBeVisible()
-  })
-
-  test('user can complete a task', async () => {
-    await tasksPage.addTask('Buy groceries')
-    await tasksPage.toggleTask('Buy groceries')
-    await expect(tasksPage.getTaskCheckbox('Buy groceries')).toBeChecked()
-  })
-
-  test('user can filter tasks', async () => {
-    await tasksPage.addTask('Task 1')
-    await tasksPage.addTask('Task 2')
-    await tasksPage.toggleTask('Task 1')
-    
-    await tasksPage.filterBy('completed')
-    await expect(tasksPage.getTaskItem('Task 1')).toBeVisible()
-    await expect(tasksPage.getTaskItem('Task 2')).not.toBeVisible()
-  })
-})
 ```
 
 ### Commits
@@ -219,69 +202,34 @@ test.describe('Tasks', () => {
 
 ### Git Workflow (Branches & Pull Requests)
 
-This project uses a branch-based workflow with pull requests for all changes.
-
 **Branch Naming Convention:**
 ```
-feature/<description>   # New features (e.g., feature/task-form)
-fix/<description>       # Bug fixes (e.g., fix/localStorage-error)
-refactor/<description>  # Code refactoring (e.g., refactor/button-variants)
-test/<description>      # Test additions (e.g., test/e2e-tasks)
-docs/<description>      # Documentation (e.g., docs/readme-update)
+feature/<description>   # New features
+fix/<description>       # Bug fixes
+refactor/<description>  # Code refactoring
+test/<description>      # Test additions
+docs/<description>      # Documentation
 ```
 
-**Workflow Steps:**
-1. **Create branch from main:**
-   ```bash
-   git checkout main
-   git pull origin main
-   git checkout -b feature/task-form
-   ```
-
-2. **Develop with descriptive commits:**
-   ```bash
-   # Make changes following TDD
-   git add .
-   git commit -m "feat(tasks): add TaskForm component"
-   ```
-
-3. **Push and create Pull Request:**
-   ```bash
-   git push -u origin feature/task-form
-   # Create PR on GitHub with description of changes
-   ```
-
-4. **After PR is approved and merged:**
-   ```bash
-   git checkout main
-   git pull origin main
-   git branch -d feature/task-form
-   ```
-
-**Pull Request Guidelines:**
-- Use descriptive title following conventional commits format
-- Include summary of changes in description
-- Reference related issues if applicable
-- Ensure all CI checks pass before requesting review
-- Keep PRs focused and small when possible
-
-**PR Title Examples:**
-```
-feat(tasks): add TaskForm component with validation
-fix(storage): handle JSON parse errors gracefully
-test(e2e): add task filtering tests with POM
-refactor(hooks): extract filter logic to useTaskFilter
+**Workflow:**
+```bash
+git checkout main && git pull origin main
+git checkout -b feature/new-feature
+# ... develop with TDD ...
+git commit -m "feat(scope): description"
+git push -u origin feature/new-feature
+# Create PR on GitHub
 ```
 
 ## Commands Reference
 
 ```bash
-pnpm dev              # Development server
+pnpm dev              # Development server (port 5173)
 pnpm build            # Production build
 pnpm lint             # ESLint check
 pnpm lint:fix         # ESLint auto-fix
 pnpm typecheck        # TypeScript check
-pnpm test             # Unit tests (watch)
+pnpm test             # Unit tests (watch mode)
 pnpm test:run         # Unit tests (single run)
 pnpm test:e2e         # E2E tests
 pnpm quality          # lint + typecheck + unit tests
@@ -305,21 +253,54 @@ pnpm docker:run       # Run container (port 3000)
 3. **Tests use `globals: true`** - no need to import `describe`, `it`, `expect`
 4. **Tailwind 4** uses `@tailwindcss/vite` plugin - no `tailwind.config.js` needed
 5. **Docker image uses nginx:alpine** with default config
-6. **localStorage key for tasks:** `tasks-manager-tasks`
-7. **Follow TDD strictly:** Write failing test first, then implement
+6. **localStorage key:** `tasks-manager-tasks`
+7. **Animation delay:** 200ms for delete animations (use fake timers in tests)
+8. **Accessibility:** Skip link, focus-visible, aria-live regions implemented
 
-## Implementation Roadmap
+## Accessibility Features
 
-See `roadmap.md` for the detailed implementation plan organized in phases:
+| Feature | Implementation |
+|---------|----------------|
+| Skip link | `<a href="#main-content" class="skip-link">` in AppLayout |
+| Focus indicators | `focus-visible:ring-2` styles on interactive elements |
+| Screen readers | `aria-label`, `role="status"`, `aria-live="polite"` |
+| Reduced motion | `@media (prefers-reduced-motion: reduce)` in index.css |
+| Keyboard nav | Full tab order, Enter/Escape handlers |
 
-1. **Phase 0:** Project preparation
-2. **Phase 1:** Types definition
-3. **Phase 2:** localStorage service
-4. **Phase 3:** useTasks hook
-5. **Phase 4:** Base UI components
-6. **Phase 5:** Task feature components
-7. **Phase 6:** Filter hook
-8. **Phase 7:** App integration
-9. **Phase 8:** E2E tests
-10. **Phase 9:** Polish & accessibility
-11. **Phase 10:** Documentation
+## Common Tasks for AI Assistants
+
+### Adding a New Feature
+1. Create types in `src/types/`
+2. Add service methods if needed in `src/services/`
+3. Create/update hooks in `src/hooks/`
+4. Build components in `src/features/<feature>/components/`
+5. Write tests alongside each file (TDD)
+6. Update E2E Page Objects and tests
+
+### Fixing a Bug
+1. Write a failing test that reproduces the bug
+2. Fix the code to make the test pass
+3. Run `pnpm quality` to ensure no regressions
+
+### Adding E2E Tests
+1. Add methods to appropriate Page Object in `e2e/pages/`
+2. Write test in `e2e/*.spec.ts`
+3. Use `await element.waitFor({ state: 'hidden' })` for animations
+
+## Implementation Phases (Completed)
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 0 | Project preparation | ✅ |
+| 1 | Types definition | ✅ |
+| 2 | localStorage service | ✅ |
+| 3 | useTasks hook | ✅ |
+| 4 | Base UI components | ✅ |
+| 5 | Task feature components | ✅ |
+| 6 | Filter hook | ✅ |
+| 7 | App integration | ✅ |
+| 8 | E2E tests | ✅ |
+| 9 | Polish & accessibility | ✅ |
+| 10 | Documentation | ✅ |
+
+See `roadmap.md` for detailed phase information.

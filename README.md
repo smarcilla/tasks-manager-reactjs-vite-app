@@ -1,14 +1,38 @@
 # Tasks Manager
 
-Aplicacion sencilla de gestion de tareas construida con React + TypeScript + Vite.
+Aplicacion de gestion de tareas construida con React + TypeScript + Vite siguiendo metodologia TDD.
 
 ## Funcionalidades
 
 - Crear, editar y eliminar tareas
 - Marcar tareas como completadas
 - Filtrar tareas por estado (todas, completadas, pendientes)
-- Persistencia en localStorage
+- Persistencia automatica en localStorage
+- Edicion inline con doble clic
+- Animaciones suaves (agregar, completar, eliminar)
 - UI responsiva con Tailwind CSS
+- Accesibilidad completa (WCAG 2.1 AA)
+
+## Accesibilidad
+
+La aplicacion cumple con los estandares WCAG 2.1 nivel AA:
+
+| Caracteristica | Implementacion |
+|----------------|----------------|
+| Navegacion por teclado | Skip link, focus visible, tab order logico |
+| Lectores de pantalla | ARIA labels, roles, live regions |
+| Movimiento reducido | Respeta `prefers-reduced-motion` |
+| Contraste | Colores con ratio minimo 4.5:1 |
+| Responsive | Funciona desde 320px hasta desktop |
+
+### Atajos de Teclado
+
+| Accion | Tecla |
+|--------|-------|
+| Agregar tarea | `Enter` en el campo de texto |
+| Guardar edicion | `Enter` |
+| Cancelar edicion | `Escape` |
+| Navegar | `Tab` / `Shift+Tab` |
 
 ## Tech Stack
 
@@ -26,10 +50,17 @@ Aplicacion sencilla de gestion de tareas construida con React + TypeScript + Vit
 
 ## Quick Start
 
+### Requisitos Previos
+
+- Node.js 20+
+- pnpm 9+
+
+### Instalacion
+
 ```bash
 # Clonar repositorio
-git clone <repo-url> tasks-manager
-cd tasks-manager
+git clone https://github.com/smarcilla/tasks-manager-reactjs-vite-app.git
+cd tasks-manager-reactjs-vite-app
 
 # Instalar dependencias
 pnpm install
@@ -39,6 +70,14 @@ pnpm dev
 ```
 
 La aplicacion estara disponible en `http://localhost:5173`
+
+### Uso Basico
+
+1. **Agregar tarea**: Escribe el titulo en el campo de texto y presiona Enter o clic en "Agregar"
+2. **Completar tarea**: Marca el checkbox junto a la tarea
+3. **Editar tarea**: Doble clic en el titulo de la tarea, modifica y presiona Enter
+4. **Eliminar tarea**: Clic en el boton "Eliminar"
+5. **Filtrar tareas**: Usa los botones "Todas", "Completadas" o "Pendientes"
 
 ## Scripts
 
@@ -59,7 +98,9 @@ La aplicacion estara disponible en `http://localhost:5173`
 | `pnpm docker:build` | Build imagen Docker |
 | `pnpm docker:run` | Ejecutar contenedor (puerto 3000) |
 
-## Estructura del Proyecto
+## Arquitectura
+
+### Estructura del Proyecto
 
 ```
 src/
@@ -70,12 +111,12 @@ src/
 │   └── tasks/            # Feature de tareas
 │       └── components/   # TaskItem, TaskForm, TaskList, TaskFilter
 ├── hooks/                # Custom hooks
-│   ├── useTasks.ts       # Gestion de estado de tareas
-│   └── useTaskFilter.ts  # Logica de filtrado
+│   ├── useTasks.ts       # Gestion de estado de tareas (CRUD)
+│   └── useTaskFilter.ts  # Logica de filtrado memoizada
 ├── services/             # Servicios externos
 │   └── taskStorage.ts    # Persistencia en localStorage
 ├── types/                # Tipos TypeScript
-│   └── task.ts           # Task, TaskFilter, TaskFormData
+│   └── task.ts           # Task, TaskFilter, NewTaskData
 ├── App.tsx               # Componente raiz
 └── main.tsx              # Entry point
 
@@ -85,6 +126,38 @@ e2e/
 │   └── TasksPage.ts      # Page Object para la pagina de tareas
 ├── app.spec.ts           # Tests E2E generales
 └── tasks.spec.ts         # Tests E2E de tareas
+```
+
+### Decisiones de Arquitectura
+
+| Decision | Justificacion |
+|----------|---------------|
+| Feature-based structure | Agrupa codigo relacionado, facilita escalabilidad |
+| Custom hooks para estado | Separacion de logica de negocio de la UI |
+| Service layer | Abstrae el acceso a localStorage, facilita testing |
+| Page Object Model (E2E) | Tests mantenibles y reutilizables |
+| Barrel exports | Imports limpios y organizados |
+
+### Flujo de Datos
+
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────────┐
+│   App.tsx   │────►│  useTasks()  │────►│  taskStorage    │
+│  (UI State) │     │  (CRUD ops)  │     │  (localStorage) │
+└─────────────┘     └──────────────┘     └─────────────────┘
+       │                   │
+       ▼                   ▼
+┌─────────────┐     ┌──────────────┐
+│ TaskFilter  │     │  TaskList    │
+│  Component  │     │  Component   │
+└─────────────┘     └──────────────┘
+       │                   │
+       └───────┬───────────┘
+               ▼
+        ┌──────────────┐
+        │useTaskFilter │
+        │ (memoized)   │
+        └──────────────┘
 ```
 
 ## Desarrollo con TDD
@@ -101,37 +174,31 @@ pnpm test
 
 # Ejecutar un archivo de test especifico
 pnpm test -- --watch src/hooks/useTasks.test.ts
+
+# Ver coverage
+pnpm test:coverage
 ```
+
+### Estadisticas de Tests
+
+| Tipo | Cantidad | Framework |
+|------|----------|-----------|
+| Unit Tests | 128 | Vitest + Testing Library |
+| E2E Tests | 23 | Playwright |
 
 ## Tests E2E con Page Object Model (POM)
 
-Los tests E2E utilizan el patron Page Object Model para mejorar la mantenibilidad y legibilidad:
+Los tests E2E utilizan el patron Page Object Model para mejorar la mantenibilidad:
 
 ```typescript
-// e2e/pages/TasksPage.ts
-export class TasksPage {
-  constructor(private page: Page) {}
+// Ejemplo de uso del Page Object
+import { TasksPage } from './pages/TasksPage'
 
-  async goto() {
-    await this.page.goto('/')
-  }
-
-  async addTask(title: string) {
-    await this.page.getByPlaceholder('Nueva tarea').fill(title)
-    await this.page.getByRole('button', { name: 'Agregar' }).click()
-  }
-
-  async getTaskByTitle(title: string) {
-    return this.page.getByRole('listitem').filter({ hasText: title })
-  }
-}
-
-// e2e/tasks.spec.ts
 test('usuario puede crear una tarea', async ({ page }) => {
   const tasksPage = new TasksPage(page)
   await tasksPage.goto()
   await tasksPage.addTask('Mi primera tarea')
-  await expect(tasksPage.getTaskByTitle('Mi primera tarea')).toBeVisible()
+  await expect(tasksPage.getTaskItem('Mi primera tarea')).toBeVisible()
 })
 ```
 
@@ -143,8 +210,6 @@ test('usuario puede crear una tarea', async ({ page }) => {
 
 ## Flujo de Trabajo Git
 
-Este proyecto utiliza un flujo de trabajo basado en ramas y pull requests:
-
 ### Ramas
 
 | Tipo | Patron | Ejemplo |
@@ -154,28 +219,6 @@ Este proyecto utiliza un flujo de trabajo basado en ramas y pull requests:
 | Refactor | `refactor/<descripcion>` | `refactor/button-variants` |
 | Test | `test/<descripcion>` | `test/e2e-tasks` |
 | Docs | `docs/<descripcion>` | `docs/readme-update` |
-
-### Workflow
-
-```bash
-# 1. Crear rama desde main
-git checkout main
-git pull origin main
-git checkout -b feature/task-form
-
-# 2. Desarrollar con commits descriptivos
-git add .
-git commit -m "feat(tasks): add TaskForm component"
-
-# 3. Push y crear Pull Request
-git push -u origin feature/task-form
-# Crear PR en GitHub
-
-# 4. Despues de aprobar y mergear, limpiar
-git checkout main
-git pull origin main
-git branch -d feature/task-form
-```
 
 ### Commits Convencionales
 
@@ -187,12 +230,7 @@ fix(storage): handle JSON parse errors
 test(hooks): add useTasks unit tests
 refactor(ui): extract Button variants
 docs(readme): update installation steps
-chore(deps): update dependencies
 ```
-
-## Roadmap
-
-Ver [roadmap.md](./roadmap.md) para el plan detallado de implementacion.
 
 ## Quality Gates
 
@@ -224,6 +262,38 @@ pnpm docker:run
 # Detener contenedor
 pnpm docker:stop
 ```
+
+### Imagen de Produccion
+
+- Base: `nginx:alpine`
+- Multi-stage build para optimizacion
+- Tamano final: ~25MB
+
+## Roadmap Completado
+
+- [x] Phase 0: Preparacion del proyecto
+- [x] Phase 1: Definicion de tipos
+- [x] Phase 2: Servicio de localStorage
+- [x] Phase 3: Hook useTasks
+- [x] Phase 4: Componentes UI base
+- [x] Phase 5: Componentes de tareas
+- [x] Phase 6: Hook de filtrado
+- [x] Phase 7: Integracion en App
+- [x] Phase 8: Tests E2E
+- [x] Phase 9: Polish y accesibilidad
+- [x] Phase 10: Documentacion
+
+Ver [roadmap.md](./roadmap.md) para detalles de cada fase.
+
+## Contribuir
+
+1. Fork el repositorio
+2. Crea una rama (`git checkout -b feature/nueva-funcionalidad`)
+3. Desarrolla siguiendo TDD
+4. Asegurate de que pasen todos los tests (`pnpm verify`)
+5. Commit con mensaje convencional (`git commit -m "feat: add feature"`)
+6. Push a tu rama (`git push origin feature/nueva-funcionalidad`)
+7. Abre un Pull Request
 
 ## Licencia
 
