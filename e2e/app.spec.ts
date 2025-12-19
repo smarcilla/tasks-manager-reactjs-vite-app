@@ -1,21 +1,23 @@
 import { test, expect } from '@playwright/test'
+import { TasksPage } from './pages/TasksPage'
 
 test.describe('App', () => {
-  test('should display the app title', async ({ page }) => {
-    await page.goto('/')
+  let tasksPage: TasksPage
 
-    await expect(page.getByRole('heading', { name: /tasks manager/i })).toBeVisible()
+  test.beforeEach(async ({ page }) => {
+    tasksPage = new TasksPage(page)
+    await tasksPage.goto()
   })
 
-  test('should have a main content area', async ({ page }) => {
-    await page.goto('/')
+  test('should display the app title', async () => {
+    await expect(tasksPage.heading).toBeVisible()
+  })
 
-    await expect(page.getByRole('main')).toBeVisible()
+  test('should have a main content area', async () => {
+    await expect(tasksPage.mainContent).toBeVisible()
   })
 
   test('should display welcome message', async ({ page }) => {
-    await page.goto('/')
-
     await expect(page.getByText(/gestiona tus tareas/i)).toBeVisible()
   })
 })
