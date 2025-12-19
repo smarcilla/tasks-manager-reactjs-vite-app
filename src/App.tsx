@@ -4,6 +4,21 @@ import { TaskForm, TaskFilter, TaskList } from './features/tasks'
 import { useTasks, useTaskFilter } from './hooks'
 import type { TaskFilter as TaskFilterType } from './types'
 
+/**
+ * Root application component.
+ *
+ * @architecture
+ * - Acts as container component managing application state
+ * - Filter state is local (not persisted) as it's UI-only preference
+ * - Task state is managed by useTasks hook (persisted to localStorage)
+ * - Composes feature components with clear data flow
+ *
+ * Data Flow:
+ * 1. useTasks provides tasks + CRUD operations
+ * 2. useState manages filter selection
+ * 3. useTaskFilter applies filter (memoized)
+ * 4. Filtered tasks passed to TaskList for rendering
+ */
 function App() {
   const { tasks, addTask, toggleTask, deleteTask, updateTask } = useTasks()
   const [filter, setFilter] = useState<TaskFilterType>('all')
