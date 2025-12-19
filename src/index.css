@@ -29,3 +29,90 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Enhanced focus styles for keyboard navigation */
+:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Remove default focus outline when not using keyboard */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Skip link for keyboard users */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #2563eb;
+  color: white;
+  padding: 8px 16px;
+  z-index: 100;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Task completion animation */
+@keyframes task-complete {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-task-complete {
+  animation: task-complete 0.3s ease-out;
+}
+
+/* Task delete animation */
+@keyframes task-delete {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}
+
+.animate-task-delete {
+  animation: task-delete 0.2s ease-out forwards;
+}
+
+/* Task add animation */
+@keyframes task-add {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-task-add {
+  animation: task-add 0.2s ease-out;
+}

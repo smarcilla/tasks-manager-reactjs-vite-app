@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TaskItem } from './TaskItem'
 import type { Task } from '../../../types'
@@ -21,6 +21,11 @@ describe('TaskItem', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   describe('rendering', () => {
@@ -66,7 +71,7 @@ describe('TaskItem', () => {
   describe('toggle', () => {
     it('calls onToggle when checkbox is clicked', async () => {
       const onToggle = vi.fn()
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
       render(<TaskItem {...defaultProps} onToggle={onToggle} />)
 
@@ -79,19 +84,24 @@ describe('TaskItem', () => {
   describe('delete', () => {
     it('calls onDelete when delete button is clicked', async () => {
       const onDelete = vi.fn()
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
       render(<TaskItem {...defaultProps} onDelete={onDelete} />)
 
       await user.click(screen.getByRole('button', { name: /eliminar/i }))
 
-      expect(onDelete).toHaveBeenCalledWith('1')
+      // Advance timers to trigger the delayed onDelete call
+      await vi.advanceTimersByTimeAsync(200)
+
+      await waitFor(() => {
+        expect(onDelete).toHaveBeenCalledWith('1')
+      })
     })
   })
 
   describe('edit', () => {
     it('enters edit mode when title is double-clicked', async () => {
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
       render(<TaskItem {...defaultProps} />)
 
@@ -103,7 +113,7 @@ describe('TaskItem', () => {
 
     it('calls onUpdate when edit is submitted with Enter', async () => {
       const onUpdate = vi.fn()
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
       render(<TaskItem {...defaultProps} onUpdate={onUpdate} />)
 
@@ -116,7 +126,7 @@ describe('TaskItem', () => {
 
     it('cancels edit when Escape is pressed', async () => {
       const onUpdate = vi.fn()
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
       render(<TaskItem {...defaultProps} onUpdate={onUpdate} />)
 
@@ -130,7 +140,7 @@ describe('TaskItem', () => {
 
     it('saves edit when input loses focus', async () => {
       const onUpdate = vi.fn()
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
       render(<TaskItem {...defaultProps} onUpdate={onUpdate} />)
 
@@ -143,7 +153,7 @@ describe('TaskItem', () => {
     })
 
     it('enters edit mode when Enter is pressed on focused title', async () => {
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
       render(<TaskItem {...defaultProps} />)
 
@@ -156,7 +166,7 @@ describe('TaskItem', () => {
     })
 
     it('enters edit mode when F2 is pressed on focused title', async () => {
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
       render(<TaskItem {...defaultProps} />)
 

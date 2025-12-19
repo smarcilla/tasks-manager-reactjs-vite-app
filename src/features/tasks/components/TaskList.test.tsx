@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { Task } from '../../../types/task'
 import { TaskList } from './TaskList'
@@ -31,6 +31,11 @@ describe('TaskList', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   describe('rendering', () => {
@@ -107,7 +112,7 @@ describe('TaskList', () => {
 
   describe('interactions', () => {
     it('calls onToggle with task id when checkbox is clicked', async () => {
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       render(
         <TaskList
           tasks={sampleTasks}
@@ -124,7 +129,7 @@ describe('TaskList', () => {
     })
 
     it('calls onDelete with task id when delete button is clicked', async () => {
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       render(
         <TaskList
           tasks={sampleTasks}
@@ -137,11 +142,16 @@ describe('TaskList', () => {
       const deleteButtons = screen.getAllByRole('button', { name: /eliminar/i })
       await user.click(deleteButtons[1])
 
-      expect(mockOnDelete).toHaveBeenCalledWith('2')
+      // Advance timers to trigger the delayed onDelete call
+      await vi.advanceTimersByTimeAsync(200)
+
+      await waitFor(() => {
+        expect(mockOnDelete).toHaveBeenCalledWith('2')
+      })
     })
 
     it('calls onUpdate with task id and new title when task is edited', async () => {
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       render(
         <TaskList
           tasks={sampleTasks}

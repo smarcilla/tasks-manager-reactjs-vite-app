@@ -1,10 +1,15 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
 
 describe('App', () => {
   beforeEach(() => {
     localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   describe('rendering', () => {
@@ -39,7 +44,7 @@ describe('App', () => {
 
   describe('complete user flow: add -> view -> complete -> filter', () => {
     it('allows adding a new task', async () => {
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       render(<App />)
 
       const input = screen.getByPlaceholderText('Nueva tarea')
@@ -51,7 +56,7 @@ describe('App', () => {
     })
 
     it('allows completing a task', async () => {
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       render(<App />)
 
       // Add a task
@@ -67,7 +72,7 @@ describe('App', () => {
     })
 
     it('allows filtering tasks by status', async () => {
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       render(<App />)
 
       // Add two tasks
@@ -98,7 +103,7 @@ describe('App', () => {
     })
 
     it('allows deleting a task', async () => {
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       render(<App />)
 
       // Add a task
@@ -111,12 +116,17 @@ describe('App', () => {
       // Delete the task
       await user.click(screen.getByRole('button', { name: /eliminar/i }))
 
-      expect(screen.queryByText('Buy groceries')).not.toBeInTheDocument()
+      // Advance timers to trigger the delayed onDelete call
+      await vi.advanceTimersByTimeAsync(200)
+
+      await waitFor(() => {
+        expect(screen.queryByText('Buy groceries')).not.toBeInTheDocument()
+      })
       expect(screen.getByText(/no hay tareas/i)).toBeInTheDocument()
     })
 
     it('allows editing a task by double-clicking', async () => {
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       render(<App />)
 
       // Add a task
@@ -140,7 +150,7 @@ describe('App', () => {
 
   describe('persistence', () => {
     it('persists tasks to localStorage', async () => {
-      const user = userEvent.setup()
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       render(<App />)
 
       const input = screen.getByPlaceholderText('Nueva tarea')
