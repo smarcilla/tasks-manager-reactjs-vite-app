@@ -29,7 +29,7 @@ export function Checkbox({ label, id, className = '', onKeyDown, onChange, disab
       <input
         type="checkbox"
         id={checkboxId}
-        className={`h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+        className={`h-5 w-5 rounded border-gray-300 text-blue-600 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
         onKeyDown={handleKeyDown}
         onChange={onChange}
         disabled={disabled}

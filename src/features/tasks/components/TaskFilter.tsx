@@ -14,7 +14,11 @@ const filterOptions: { value: TaskFilterType; label: string }[] = [
 
 export function TaskFilter({ currentFilter, onChange }: TaskFilterProps) {
   return (
-    <fieldset role="group" aria-label="Filtrar tareas" className="flex gap-2">
+    <fieldset
+      role="group"
+      aria-label="Filtrar tareas por estado"
+      className="flex flex-wrap gap-2"
+    >
       {filterOptions.map(({ value, label }) => {
         const isActive = currentFilter === value
         return (
@@ -23,7 +27,7 @@ export function TaskFilter({ currentFilter, onChange }: TaskFilterProps) {
             variant={isActive ? 'primary' : 'secondary'}
             onClick={() => onChange(value)}
             aria-pressed={isActive}
-            className="text-sm"
+            className="text-xs sm:text-sm flex-1 sm:flex-none min-w-[80px]"
           >
             {label}
           </Button>

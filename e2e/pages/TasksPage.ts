@@ -73,12 +73,14 @@ export class TasksPage extends BasePage {
 
   /**
    * Deletes a task by its title.
+   * Waits for the delete animation to complete before returning.
    * @param title - The title of the task to delete
    */
   async deleteTask(title: string): Promise<void> {
-    await this.getTaskItem(title)
-      .getByRole('button', { name: /eliminar/i })
-      .click()
+    const taskItem = this.getTaskItem(title)
+    await taskItem.getByRole('button', { name: /eliminar/i }).click()
+    // Wait for the task to be removed (animation takes 200ms)
+    await taskItem.waitFor({ state: 'hidden' })
   }
 
   /**
